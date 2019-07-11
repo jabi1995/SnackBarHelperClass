@@ -1,5 +1,6 @@
 public class SnackbarHelper {
 
+  private Handler applicationHander = new Hander();
   private static final int BACKGROUND_COLOR = 0xbf323232;
 
   private static  SnackbarHelper THE_INSTANCE;
@@ -126,7 +127,7 @@ public class SnackbarHelper {
         messageSnackbar.dismiss();
       }
     };
-     ApplicationLoader.applicationHandler.postDelayed(runnable, timeInMs);
+     applicationHander.postDelayed(runnable, timeInMs);
     return this;
   }
 
@@ -185,6 +186,10 @@ public class SnackbarHelper {
     return this;
   }
 
+ private Typeface getFontFromAsset(String pathToFont) {
+    return Typeface.createFromAsset(getAssets(), pathToFont);
+  }
+  
   private void show(final String message, final DismissBehavior dismissBehavior,boolean isTypeActivity ) {
     Activity activity =   (isTypeActivity ? appCompatActivity : fragmentActivity1);
 
@@ -219,7 +224,7 @@ public class SnackbarHelper {
             textView.setTextColor(textColor);
             messageSnackbar.setActionTextColor(actionBarColor);
             if (isFontSet) {
-              textView.setTypeface(ApplicationLoader.newInstance().getFontFromAsset(fontPath));
+              textView.setTypeface(getFontFromAsset(fontPath));
             }
 
             if (isRtl) {
