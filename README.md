@@ -8,7 +8,7 @@ OPTIONS:
 4) suitable for Fragment and Acitivty
 
 
-With Warm Thaks to 
+With Warm Thanks:
 https://github.com/google-ar/sceneform-android-sdk/blob/master/samples/augmentedimage/app/src/main/java/com/google/ar/sceneform/samples/common/helpers/SnackbarHelper.java 
 
 IF YOU ADD NEW AMAZING FEATURES AND CHANGE THE CODE STYLE IN A BETTER FORM PLEASE COMMIT 
