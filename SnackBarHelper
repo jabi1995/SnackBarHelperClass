@@ -1,4 +1,6 @@
-private static final int BACKGROUND_COLOR = 0xbf323232;
+public class SnackbarHelper {
+
+  private static final int BACKGROUND_COLOR = 0xbf323232;
 
   private static  SnackbarHelper THE_INSTANCE;
   private Snackbar messageSnackbar;
@@ -273,3 +275,5 @@ private static final int BACKGROUND_COLOR = 0xbf323232;
     }
 
   }
+
+}
