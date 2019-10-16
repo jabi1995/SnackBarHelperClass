@@ -1,6 +1,23 @@
+package snapfit.ir.snappfit.framework;
+
+import android.app.Activity;
+import android.graphics.Color;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.TextView;
+
+import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.android.material.snackbar.Snackbar;
+
+import androidx.annotation.DrawableRes;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.ViewCompat;
+import androidx.fragment.app.FragmentActivity;
+import snapfit.ir.snappfit.framework.core.ApplicationLoader;
+
 public class SnackbarHelper {
 
-  private Handler applicationHander = new Hander();
   private static final int BACKGROUND_COLOR = 0xbf323232;
 
   private static  SnackbarHelper THE_INSTANCE;
@@ -10,10 +27,12 @@ public class SnackbarHelper {
   private boolean isRtl = false;
   private boolean isFontSet = false;
 
-  private String TEXT_OF_DISMISS = "ok";
+  private String TEXT_OF_DISMISS = "باشه";
 
   private static AppCompatActivity appCompatActivity;
   private static FragmentActivity fragmentActivity1;
+  private static Activity activity;
+
   private final boolean TYPE_ACTIVITY = true;
   private String fontPath;
   private int textColor = Color.WHITE;
@@ -26,6 +45,8 @@ public class SnackbarHelper {
   private int actionBarColor = Color.RED;
   private int backgroundColor = 0;
   private DIRECTION defaultDirection = DIRECTION.RIGHT;
+
+  private onDismissListener onDismissListener;
 
   private enum DismissBehavior {
     HIDE,
@@ -40,6 +61,10 @@ public class SnackbarHelper {
     BOTTOM
   }
 
+  public interface  onDismissListener {
+    void onDismiss(Snackbar snackbar, boolean isDismiss);
+  }
+
   public static SnackbarHelper newInstance(AppCompatActivity activity) {
 
     if (THE_INSTANCE == null) {
@@ -50,6 +75,14 @@ public class SnackbarHelper {
     return THE_INSTANCE;
   }
 
+  /*public static SnackbarHelper newInstance(Activity currentActivity) {
+    if (THE_INSTANCE == null) {
+      THE_INSTANCE = new SnackbarHelper();
+    }
+    activity = currentActivity;
+    return THE_INSTANCE;
+  }*/
+
   public static SnackbarHelper newInstance(FragmentActivity fragmentActivity) {
     if (THE_INSTANCE == null) {
       THE_INSTANCE = new SnackbarHelper();
@@ -59,13 +92,16 @@ public class SnackbarHelper {
     return THE_INSTANCE;
   }
 
+  public void dismiss() {
+    messageSnackbar.dismiss();
+  }
+
   public boolean isShowing() {
     return messageSnackbar != null;
   }
 
   /** Shows a snackbar with a given message. */
   public void showMessage(String message) {
-
     if (appCompatActivity == null) {
       show(message, DismissBehavior.HIDE, !TYPE_ACTIVITY);
       return;
@@ -73,6 +109,16 @@ public class SnackbarHelper {
 
     show(message, DismissBehavior.HIDE, TYPE_ACTIVITY);
   }
+
+  public void showMessageAndFinish(String message) {
+    if (appCompatActivity == null) {
+      show(message, DismissBehavior.FINISH, !TYPE_ACTIVITY);
+      return;
+    }
+
+    show(message, DismissBehavior.FINISH, TYPE_ACTIVITY);
+  }
+
 
   /** Shows a snackbar with a given message, and a dismiss button. */
   public void showMessageWithDismiss(String message) {
@@ -127,7 +173,7 @@ public class SnackbarHelper {
         messageSnackbar.dismiss();
       }
     };
-     applicationHander.postDelayed(runnable, timeInMs);
+     ApplicationLoader.applicationHandler.postDelayed(runnable, timeInMs);
     return this;
   }
 
@@ -186,10 +232,6 @@ public class SnackbarHelper {
     return this;
   }
 
- private Typeface getFontFromAsset(String pathToFont) {
-    return Typeface.createFromAsset(getAssets(), pathToFont);
-  }
-  
   private void show(final String message, final DismissBehavior dismissBehavior,boolean isTypeActivity ) {
     Activity activity =   (isTypeActivity ? appCompatActivity : fragmentActivity1);
 
@@ -197,10 +239,12 @@ public class SnackbarHelper {
       new Runnable() {
         @Override
         public void run() {
-          if (isIconSet){ //to show icon inside the snakcbar
             messageSnackbar = Snackbar.make(activity.findViewById(android.R.id.content), message, Snackbar.LENGTH_INDEFINITE);
             View snackbarLayout = messageSnackbar.getView();
+            setSnackBarWidthMatchParent(snackbarLayout);
             TextView textView = snackbarLayout.findViewById(com.google.android.material.R.id.snackbar_text);
+
+          if (isIconSet) { //to show icon inside the snakcbar
 
             switch (defaultDirection) {
               case TOP:
@@ -216,22 +260,23 @@ public class SnackbarHelper {
                 textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, iconResource);
                 break;
 
-                default:
-                  textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, iconResource, 0);
+              default:
+                textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, iconResource, 0);
             }
+          }
 
             textView.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
             textView.setTextColor(textColor);
             messageSnackbar.setActionTextColor(actionBarColor);
+
             if (isFontSet) {
-              textView.setTypeface(getFontFromAsset(fontPath));
+              textView.setTypeface(ApplicationLoader.newInstance().getFontFromAsset(fontPath));
             }
 
             if (isRtl) {
               ViewCompat.setLayoutDirection(messageSnackbar.getView(), ViewCompat.LAYOUT_DIRECTION_RTL); //force rtl for persain
-            }
 
-          } else {
+            } else {
             messageSnackbar = Snackbar.make(activity.findViewById(android.R.id.content), message, Snackbar.LENGTH_INDEFINITE);
             messageSnackbar.setTextColor(textColor);
             messageSnackbar.setActionTextColor(actionBarColor);
@@ -247,7 +292,7 @@ public class SnackbarHelper {
           }
 
           if (dismissBehavior != DismissBehavior.HIDE) {
-            messageSnackbar.setAction(TEXT_OF_DISMISS, v -> messageSnackbar.dismiss());
+            //messageSnackbar.setAction(TEXT_OF_DISMISS, v -> messageSnackbar.dismiss());
             if (dismissBehavior == DismissBehavior.FINISH) {
               messageSnackbar.addCallback(
                 new BaseTransientBottomBar.BaseCallback<Snackbar>() {
@@ -259,6 +304,7 @@ public class SnackbarHelper {
                 });
             }
           }
+
           setupMargin(messageSnackbar);
           messageSnackbar.show();
         }
@@ -279,6 +325,13 @@ public class SnackbarHelper {
       snackBarView.setLayoutParams(layoutParams);
     }
 
+  }
+
+  private void setSnackBarWidthMatchParent(View view) {
+    FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) view.getLayoutParams();
+    params.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+    params.width = FrameLayout.LayoutParams.MATCH_PARENT;
+    view.setLayoutParams(params);
   }
 
 }
